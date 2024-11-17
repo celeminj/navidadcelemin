@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartas a los Reyes Magos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;700&family=Sacramento&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Raleway', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Sacramento', cursive;
+        }
+    </style>
+</head>
+
+<body class="bg-red-50 text-gray-800 min-h-screen flex flex-col items-center p-6">
+    <header class="text-center mb-6">
+        <h1 class="text-4xl text-red-600 font-bold mb-4">Escribe tu carta a los Reyes Magos</h1>
+        <p class="text-lg text-gray-600">¡Haz tus deseos realidad! 🎁</p>
+    </header>
+
+    <main class="w-full max-w-xl bg-white shadow-lg rounded-lg p-6">
+        <form id="cartaForm" class="space-y-4">
+            <div>
+                <label for="nombre" class="block text-gray-700 font-semibold">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required
+                    class="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-red-300">
+            </div>
+            <div>
+                <label for="contenido" class="block text-gray-700 font-semibold">Producto:</label>
+                <textarea id="contenido" name="contenido" rows="4" required
+                    class="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-red-300"></textarea>
+            </div>
+            <div>
+                <label for="url" class="block text-gray-700 font-semibold">URL de imagen (opcional):</label>
+                <input type="url" id="url" name="url"
+                    class="w-full border border-gray-300 rounded-md p-2 focus:ring focus:ring-red-300">
+            </div>
+            <button type="submit"
+                class="w-full bg-red-500 text-white font-bold py-2 rounded-md hover:bg-red-600 transition">Enviar
+                Carta</button>
+        </form>
+    </main>
+
+    <section class="w-full max-w-xl mt-8">
+        <h2 class="text-2xl text-red-600 font-bold mb-4">Cartas enviadas</h2>
+        <ul id="cartasList" class="space-y-4"></ul>
+    </section>
+<script>
+    const API_URL = 'http://localhost:3000/cartas';
+
+    // Función para obtener las cartas desde la API
+    async function fetchCartas() {
+        const response = await fetch(API_URL);
+        const cartas = await response.json();
+        renderCartas(cartas);
+    }
+
+    // Función para agregar una nueva carta mediante la API
+    async function addCarta(carta) {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(carta),
+        });
+        return await response.json();
+    }
+
+    // Función para eliminar una carta mediante la API
+    async function deleteCarta(id) {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        fetchCartas(); // Recargar las cartas después de eliminar
+    }
+
+    // Renderizar las cartas en la lista
+    function renderCartas(cartas) {
+        const cartasList = document.getElementById('cartasList');
+        cartasList.innerHTML = ''; // Limpiar la lista
+
+        cartas.forEach((carta) => {
+            const cartaItem = document.createElement('li');
+            cartaItem.className = "p-4 bg-white border border-gray-200 rounded-lg shadow";
+
+            let cartaContent = `
+                <h3 class="text-red-500 font-semibold text-lg">${carta.nombre}</h3>
+                <p class="text-gray-700 mt-2">${carta.contenido}</p>
+            `;
+
+            if (carta.url) {
+                cartaContent += `<img src="${carta.url}" alt="Imagen adjunta" class="mt-4 max-h-48 w-full object-cover rounded-lg border border-gray-300">`;
+            }
+
+            cartaContent += `<button onclick="deleteCarta('${carta._id}')" class="mt-4 bg-red-500 text-white font-bold py-1 px-3 rounded-md hover:bg-red-600 transition">Eliminar</button>`;
+            cartaItem.innerHTML = cartaContent;
+            cartasList.appendChild(cartaItem);
+        });
+    }
+
+    // Manejar el envío del formulario
+    document.getElementById('cartaForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const nombre = document.getElementById('nombre').value.trim();
+        const contenido = document.getElementById('contenido').value.trim();
+        const url = document.getElementById('url').value.trim();
+
+        if (!nombre || !contenido) {
+            alert('Por favor, completa todos los campos obligatorios.');
+            return;
+        }
+
+        const nuevaCarta = { nombre, contenido, url };
+        await addCarta(nuevaCarta);
+        document.getElementById('cartaForm').reset(); // Limpiar el formulario
+        fetchCartas(); // Recargar las cartas
+    });
+
+    // Cargar las cartas al iniciar la página
+    window.onload = fetchCartas;
+</script>
+
+</body>
+
+</html>
