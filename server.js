@@ -77,7 +77,7 @@ app.delete('/cartas/:id', (req, res) => {
 });
 
 // Iniciar el servidor
-const PORT = 3000;
+const PORT = 3306;
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
